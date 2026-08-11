@@ -1,0 +1,6 @@
+<configuration>
+    <include resource="no/novari/telemetry/logback-json.xml"/>
+    <root level="INFO">
+        <appender-ref ref="TELEMETRY_JSON"/>
+    </root>
+</configuration>
