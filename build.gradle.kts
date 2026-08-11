@@ -9,6 +9,7 @@ plugins {
     id("org.springframework.boot") version "3.5.16" apply false
     id("io.spring.dependency-management") version "1.1.7"
     id("maven-publish")
+    id("java-test-fixtures")
     id("com.github.ben-manes.versions") version "0.54.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     kotlin("jvm") version "2.4.0"
@@ -53,11 +54,20 @@ dependencies {
     compileOnly("org.springframework:spring-web")
     compileOnly("jakarta.servlet:jakarta.servlet-api")
 
+    // Kun for logback-json.xml. Konsumenten legger selv til runtimeOnly hvis
+    // fragmentet tas i bruk - biblioteket skal ikke tvinge et loggformat på noen.
+    compileOnly("net.logstash.logback:logstash-logback-encoder:9.0")
+
+    testFixturesApi("io.opentelemetry:opentelemetry-sdk-trace")
+    testFixturesApi("io.opentelemetry:opentelemetry-sdk-testing")
+    testFixturesApi("org.springframework.boot:spring-boot-test")
+
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-web")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
+    testImplementation("net.logstash.logback:logstash-logback-encoder:9.0")
 }
 
 tasks.withType<Test>().configureEach {
