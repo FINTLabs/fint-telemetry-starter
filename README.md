@@ -59,6 +59,7 @@ Mangler miljøvariabelen, kjører applikasjonen helt normalt, men ingen spans ek
 | `management.observations.annotations.enabled` | `true` | Slår på `@Observed`. Spring Boot har ingen standardverdi for denne — uten den gjør annotasjonen ingenting |
 | `novari.telemetry.org-id` | — | Legges til som ressursattributtet `org-id` på alle spans, via `management.opentelemetry.resource-attributes.org-id`. Kan også settes via miljøvariabelen `NOVARI_TELEMETRY_ORG_ID` |
 | `novari.telemetry.actuator-exclusion.enabled` | `true` | Ekskluderer actuator-endepunkter (stien fra `management.endpoints.web.base-path`, standard `/actuator`) fra sporing |
+| `management.observations.enable.spring.security` | `false` | Skrur av Spring Securitys egne filter-kjede-spenn (`spring.security.*`). Sett til `true` for å beholde dem — se [Feilsøking](#feilsøking) for hvorfor de er av som standard |
 
 Ingen av standardverdiene overstyrer en verdi du allerede har satt selv.
 
@@ -205,7 +206,7 @@ lett mistolkes som at propagering eller instrumentering ikke virker.
 
 ## Feilsøking
 
-Fire ting som feiler stille, uten unntak eller kompileringsfeil:
+Fem ting som feiler stille, uten unntak eller kompileringsfeil:
 
 **Tjenesten heter `unknown_service` i sporingsverktøyet.** `spring.application.name` er ikke satt.
 Dette er en standard Spring Boot-property som biblioteket ikke setter for deg (i motsetning til
@@ -223,6 +224,15 @@ etter en logglinje fra `TelemetryEnvironmentPostProcessor` som starter med
 **`@Observed` uten forventet spannavn.** Se [Egendefinerte spans](#egendefinerte-spans) — uten
 en eksplisitt `contextualName` blir spannavnet satt automatisk til `klassenavn#metodenavn`
 (normalisert til små bokstaver med bindestrek), ikke verdien i `name`.
+
+**Mange tomme `security filterchain`-spor, ett per helsesjekk/scraping.** Spring Security lager
+egne spenn (`spring.security.filterchains`, `spring.security.http.secured.requests` m.fl.) for
+hver request som går gjennom sikkerhetsfilterkjeden — uavhengig av `http.server.requests` og
+uten sti-informasjon i konteksten, så actuator-ekskluderingen over kan aldri filtrere dem bort.
+Siden actuator-kallet selv ekskluderes, men ikke Securitys eget spenn, blir det stående igjen som
+et eget, tomt rot-spor. Biblioteket skrur derfor av disse spennene som standard
+(`management.observations.enable.spring.security=false`) — sett den til `true` selv om dere vil
+beholde dem.
 
 **Ingen spans i tester.** Se [Testing](#testing) — mangler `@AutoConfigureObservability` på
 testklassen, produseres ingen spans, siden Spring Boot slår av sporing i testkontekst som
