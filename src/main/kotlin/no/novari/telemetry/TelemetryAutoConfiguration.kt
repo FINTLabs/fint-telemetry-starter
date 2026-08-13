@@ -36,6 +36,9 @@ class TelemetryAutoConfiguration {
         basePath: String,
     ): Boolean {
         val request = (context as? ServerRequestObservationContext)?.carrier
-        return request != null && request.requestURI.startsWith(basePath)
+        // requestURI includes the servlet context path, while base-path is defined relative to
+        // it - comparing against requestURI directly fails to exclude anything once
+        // server.servlet.context-path is non-empty. servletPath is already context-relative.
+        return request != null && request.servletPath.startsWith(basePath)
     }
 }

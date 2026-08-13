@@ -18,17 +18,35 @@ class TelemetryAutoConfigurationTest {
             .withConfiguration(AutoConfigurations.of(TelemetryAutoConfiguration::class.java))
             .withBean(ObservationRegistry::class.java, { ObservationRegistry.create() })
 
-    private fun contextFor(path: String) =
-        ServerRequestObservationContext(
-            MockHttpServletRequest("GET", path),
-            MockHttpServletResponse(),
-        )
+    private fun contextFor(
+        path: String,
+        contextPath: String = "",
+    ) = ServerRequestObservationContext(
+        MockHttpServletRequest("GET", contextPath + path).apply {
+            this.contextPath = contextPath
+            servletPath = path
+        },
+        MockHttpServletResponse(),
+    )
 
     @Test
     fun `excludes requests under the actuator base path`() {
         contextRunner.run { context ->
             val predicate = context.getBean<ObservationPredicate>()
             assertFalse(predicate.test("http.server.requests", contextFor("/actuator/health")))
+        }
+    }
+
+    @Test
+    fun `excludes actuator requests when a servlet context path is set`() {
+        contextRunner.run { context ->
+            val predicate = context.getBean<ObservationPredicate>()
+            assertFalse(
+                predicate.test(
+                    "http.server.requests",
+                    contextFor("/actuator/health", contextPath = "/beta/fintlabs-no"),
+                ),
+            )
         }
     }
 

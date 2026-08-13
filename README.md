@@ -37,9 +37,13 @@ Publiseres til `https://repo.fintlabs.no/releases`. Krever JDK 25 eller nyere, S
 Legg til avhengigheten. Så snart plattformen setter miljøvariabelen
 `OTEL_EXPORTER_OTLP_ENDPOINT`, er sporing aktivt uten videre konfigurasjon.
 
-Ingenting annet trengs for å komme i gang — `@Observed`-annotasjonen fungerer, sampling er satt
-opp, og actuator-endepunkter er allerede ekskludert. Se [Egendefinerte spans](#egendefinerte-spans)
-for hvordan du legger på ditt eget span.
+`@Observed`-annotasjonen fungerer, sampling er satt opp, og actuator-endepunkter er allerede
+ekskludert. Se [Egendefinerte spans](#egendefinerte-spans) for hvordan du legger på ditt eget span.
+
+**Sett `spring.application.name`.** Dette er en standard Spring Boot-property, ikke noe biblioteket
+setter for deg — men Spring Boots egen OTel-instrumentering bruker den til å navngi tjenesten
+(`service.name`) på hvert spenn. Mangler den, blir alle spans fra appen merket `unknown_service` i
+sporingsverktøyet, uten varsel av noe slag.
 
 Mangler miljøvariabelen, kjører applikasjonen helt normalt, men ingen spans eksporteres noe sted
 — se [Feilsøking](#feilsøking).
@@ -201,7 +205,13 @@ lett mistolkes som at propagering eller instrumentering ikke virker.
 
 ## Feilsøking
 
-Tre ting som feiler stille, uten unntak eller kompileringsfeil:
+Fire ting som feiler stille, uten unntak eller kompileringsfeil:
+
+**Tjenesten heter `unknown_service` i sporingsverktøyet.** `spring.application.name` er ikke satt.
+Dette er en standard Spring Boot-property som biblioteket ikke setter for deg (i motsetning til
+`novari.telemetry.org-id`, som blir en ressursattributt via biblioteket) — Spring Boots egen
+OTel-instrumentering faller tilbake til literal-strengen `"unknown_service"` når den mangler. Spans
+produseres og eksporteres helt normalt, bare uten et brukbart tjenestenavn.
 
 **Manglende eksport-endepunkt.** Er verken `OTEL_EXPORTER_OTLP_ENDPOINT` eller
 `management.otlp.tracing.endpoint` satt, genereres spans som normalt, men blir aldri eksportert
