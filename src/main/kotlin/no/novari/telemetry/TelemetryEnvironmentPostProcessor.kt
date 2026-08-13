@@ -34,6 +34,14 @@ class TelemetryEnvironmentPostProcessor(
         if (environment.getProperty(MGMT_TRACING_SAMPLING_PROBABILITY) == null) {
             defaults[MGMT_TRACING_SAMPLING_PROBABILITY] = "1.0"
         }
+        // Spring Securitys egen ObservationFilterChainDecorator lager spenn (spring.security.*)
+        // som ikke er nøstet under http.server.requests og ikke bærer HttpServletRequest i sin
+        // egen Observation.Context - vår actuator-ekskludering kan derfor aldri filtrere dem bort
+        // per sti. De blir stående som egne, tomme rot-spor for hver helsesjekk/scraping. Av som
+        // standard; sett denne til true selv for å beholde dem.
+        if (environment.getProperty(MGMT_OBSERVATIONS_ENABLE_SPRING_SECURITY) == null) {
+            defaults[MGMT_OBSERVATIONS_ENABLE_SPRING_SECURITY] = "false"
+        }
 
         val orgId = environment.getProperty(NOVARI_TELEMETRY_ORG_ID)
         if (!orgId.isNullOrBlank() && environment.getProperty(MGMT_OTEL_RESOURCE_ATTR_ORG_ID) == null) {
@@ -76,6 +84,7 @@ class TelemetryEnvironmentPostProcessor(
         const val MGMT_OTLP_TRACING_ENDPOINT = "management.otlp.tracing.endpoint"
         const val MGMT_OBSERVATIONS_ANNOTATIONS_ENABLED = "management.observations.annotations.enabled"
         const val MGMT_TRACING_SAMPLING_PROBABILITY = "management.tracing.sampling.probability"
+        const val MGMT_OBSERVATIONS_ENABLE_SPRING_SECURITY = "management.observations.enable.spring.security"
         const val MGMT_TRACING_ENABLED = "management.tracing.enabled"
         const val NOVARI_TELEMETRY_ORG_ID = "novari.telemetry.org-id"
         const val MGMT_OTEL_RESOURCE_ATTR_ORG_ID = "management.opentelemetry.resource-attributes.org-id"

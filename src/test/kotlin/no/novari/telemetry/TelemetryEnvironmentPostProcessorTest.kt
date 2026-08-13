@@ -90,6 +90,20 @@ class TelemetryEnvironmentPostProcessorTest {
     }
 
     @Test
+    fun `disables spring security observations by default`() {
+        val environment = StandardEnvironment()
+        postProcessor.postProcessEnvironment(environment, mock())
+        assertEquals("false", environment.getProperty("management.observations.enable.spring.security"))
+    }
+
+    @Test
+    fun `does not override an explicitly enabled spring security observations setting`() {
+        val environment = environmentWith("management.observations.enable.spring.security" to "true")
+        postProcessor.postProcessEnvironment(environment, mock())
+        assertEquals("true", environment.getProperty("management.observations.enable.spring.security"))
+    }
+
+    @Test
     fun `translates novari telemetry org-id to opentelemetry resource attribute`() {
         val environment = environmentWith("novari.telemetry.org-id" to "afk.no")
         postProcessor.postProcessEnvironment(environment, mock())
